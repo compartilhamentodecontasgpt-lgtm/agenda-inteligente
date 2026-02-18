@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agenda Voz & Projetos — BTX Planner</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1621;
+      --panel2:#0c121b;
+      --stroke:#1f2a3a;
+      --stroke2:#223149;
+      --text:#eaf2ff;
+      --muted:#a7b4c8;
+      --accent:#2f7dff;
+      --accent2:#00d4ff;
+      --good:#22c55e;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --shadow: 0 18px 50px rgba(0,0,0,.45);
+      --r:18px;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Noto Sans", "Helvetica Neue", sans-serif;
+      background: radial-gradient(1200px 600px at 20% -10%, rgba(47,125,255,.25), transparent 55%),
+                  radial-gradient(900px 500px at 95% 0%, rgba(0,212,255,.12), transparent 60%),
+                  linear-gradient(180deg, #070b10, #0b0f14);
+      color:var(--text);
+      min-height:100vh;
+    }
+    header{
+      position:sticky; top:0; z-index:10;
+      backdrop-filter: blur(10px);
+      background: rgba(7,11,16,.62);
+      border-bottom:1px solid rgba(31,42,58,.55);
+    }
+    .wrap{max-width:1200px; margin:0 auto; padding:14px 16px;}
+    .topbar{
+      display:flex; align-items:center; gap:12px; justify-content:space-between;
+    }
+    .brand{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:36px; height:36px; border-radius:12px;
+      background: linear-gradient(135deg, rgba(47,125,255,.95), rgba(0,212,255,.85));
+      box-shadow: 0 10px 25px rgba(47,125,255,.22);
+      position:relative;
+    }
+    .logo:after{
+      content:"";
+      position:absolute; inset:8px;
+      border-radius:10px;
+      border:1px solid rgba(255,255,255,.35);
+      transform: rotate(8deg);
+    }
+    .brand h1{font-size:15px; margin:0; letter-spacing:.2px}
+    .brand p{margin:0; font-size:12px; color:var(--muted)}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end;}
+    .btn{
+      border:1px solid rgba(34,49,73,.9);
+      background: rgba(15,22,33,.75);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      cursor:pointer;
+      box-shadow: 0 10px 30px rgba(0,0,0,.25);
+      transition:.15s transform, .15s background, .15s border;
+      display:inline-flex; gap:8px; align-items:center;
+      user-select:none;
+      font-size:13px;
+    }
+    .btn:hover{transform: translateY(-1px); background: rgba(15,22,33,.95); border-color: rgba(47,125,255,.55);}
+    .btn.primary{background: linear-gradient(135deg, rgba(47,125,255,.95), rgba(0,212,255,.7)); border-color: transparent;}
+    .btn.primary:hover{filter: brightness(1.05);}
+    .btn.danger{border-color: rgba(239,68,68,.6);}
+    .pill{
+      font-size:12px;
+      color: rgba(234,242,255,.9);
+      background: rgba(47,125,255,.13);
+      border:1px solid rgba(47,125,255,.25);
+      padding:8px 10px;
+      border-radius:999px;
+      display:inline-flex; gap:8px; align-items:center;
+    }
+    main .grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:14px;
+      padding:16px;
+      max-width:1200px;
+      margin:0 auto;
+    }
+    @media (max-width: 980px){
+      main .grid{grid-template-columns: 1fr; }
+    }
+    .card{
+      background: linear-gradient(180deg, rgba(15,22,33,.92), rgba(12,18,27,.92));
+      border:1px solid rgba(31,42,58,.75);
+      border-radius: var(--r);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+    .card .head{
+      padding:14px 14px 10px;
+      border-bottom:1px solid rgba(31,42,58,.65);
+      display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+    }
+    .title{
+      margin:0; font-size:14px; letter-spacing:.2px;
+    }
+    .sub{
+      margin:4px 0 0; color:var(--muted); font-size:12px; line-height:1.35;
+    }
+    .card .body{padding:14px;}
+    .row{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .grow{flex:1}
+    input[type="text"], textarea, select{
+      width:100%;
+      background: rgba(7,11,16,.55);
+      border:1px solid rgba(34,49,73,.85);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      outline:none;
+      transition:.15s border;
+      font-size:13px;
+    }
+    textarea{min-height:110px; resize: vertical;}
+    input[type="text"]:focus, textarea:focus, select:focus{
+      border-color: rgba(47,125,255,.6);
+    }
+
+    /* Calendar */
+    .calTop{
+      display:flex; align-items:center; justify-content:space-between; gap:10px;
+      padding:12px 14px;
+      border-bottom:1px solid rgba(31,42,58,.65);
+      background: rgba(7,11,16,.25);
+    }
+    .calTop .month{
+      font-size:14px; margin:0; letter-spacing:.2px;
+    }
+    .cal{
+      padding:12px 14px 14px;
+    }
+    .dow{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+      margin-bottom:8px;
+      color: var(--muted);
+      font-size:11px;
+      text-align:center;
+    }
+    .days{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:8px;
+    }
+    .day{
+      border:1px solid rgba(31,42,58,.7);
+      background: rgba(7,11,16,.45);
+      border-radius:14px;
+      padding:10px 10px;
+      min-height:72px;
+      cursor:pointer;
+      position:relative;
+      transition:.12s transform, .12s border, .12s background;
+      user-select:none;
+    }
+    .day:hover{transform: translateY(-1px); border-color: rgba(47,125,255,.45);}
+    .day.muted{opacity:.35; cursor:default}
+    .day.selected{
+      border-color: rgba(0,212,255,.8);
+      box-shadow: 0 0 0 2px rgba(0,212,255,.16) inset;
+    }
+    .dnum{font-size:12px; color:rgba(234,242,255,.95)}
+    .badge{
+      position:absolute; right:8px; top:8px;
+      background: rgba(47,125,255,.18);
+      border:1px solid rgba(47,125,255,.25);
+      color: rgba(234,242,255,.9);
+      font-size:10px;
+      padding:3px 7px;
+      border-radius:999px;
+    }
+    .dot{
+      width:6px; height:6px; border-radius:999px;
+      background: var(--good);
+      display:inline-block;
+      margin-left:6px;
+      box-shadow: 0 0 0 3px rgba(34,197,94,.15);
+    }
+    .kpi{
+      display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;
+    }
+    .kpi .pill{background: rgba(255,255,255,.04); border-color: rgba(34,49,73,.75);}
+    .tiny{font-size:11px; color:var(--muted)}
+    .list{
+      display:flex; flex-direction:column; gap:8px; margin-top:10px;
+    }
+    .item{
+      border:1px solid rgba(34,49,73,.8);
+      background: rgba(7,11,16,.45);
+      border-radius:14px;
+      padding:10px 10px;
+      display:flex; gap:10px; align-items:flex-start;
+    }
+    .chk{margin-top:2px;}
+    .item .meta{flex:1}
+    .item .meta b{display:block; font-size:12.5px}
+    .item .meta span{display:block; font-size:11px; color:var(--muted); margin-top:2px; line-height:1.25}
+    .tag{
+      font-size:10px;
+      padding:4px 8px;
+      border-radius:999px;
+      border:1px solid rgba(34,49,73,.85);
+      color: rgba(234,242,255,.9);
+      background: rgba(255,255,255,.03);
+      white-space:nowrap;
+    }
+    .tag.med{border-color: rgba(47,125,255,.45); background: rgba(47,125,255,.08);}
+    .tag.eng{border-color: rgba(0,212,255,.4); background: rgba(0,212,255,.06);}
+    .tag.soft{border-color: rgba(34,197,94,.35); background: rgba(34,197,94,.06);}
+    .tag.info{border-color: rgba(245,158,11,.35); background: rgba(245,158,11,.06);}
+    .tag.rec{border-color: rgba(239,68,68,.35); background: rgba(239,68,68,.06);}
+    .sep{height:1px; background: rgba(31,42,58,.65); margin:12px 0;}
+    .voiceState{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px dashed rgba(34,49,73,.85);
+      background: rgba(7,11,16,.35);
+    }
+    .mic{
+      width:10px; height:10px; border-radius:999px;
+      background: rgba(167,180,200,.5);
+      box-shadow: 0 0 0 6px rgba(167,180,200,.06);
+    }
+    .mic.on{
+      background: var(--bad);
+      box-shadow: 0 0 0 8px rgba(239,68,68,.12);
+      animation: pulse 1.1s infinite;
+    }
+    @keyframes pulse{
+      0%{transform: scale(1);}
+      50%{transform: scale(1.1);}
+      100%{transform: scale(1);}
+    }
+    .hint{font-size:12px; color:var(--muted); margin:0}
+    .footerNote{
+      padding:12px 14px;
+      border-top:1px solid rgba(31,42,58,.65);
+      color:var(--muted);
+      font-size:12px;
+      line-height:1.35;
+      background: rgba(7,11,16,.2);
+    }
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:11px;
+      padding:2px 6px;
+      border-radius:8px;
+      border:1px solid rgba(34,49,73,.85);
+      background: rgba(255,255,255,.03);
+      color: rgba(234,242,255,.9);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="topbar">
+        <div class="brand">
+          <div class="logo" aria-hidden="true"></div>
+          <div>
+            <h1>BTX Planner — Agenda + Voz + Projetos</h1>
+            <p>Organização no modo “sem perder ideia”. Clique no dia, dite, salve. Backup quando quiser.</p>
+          </div>
+        </div>
+
+        <div class="actions">
+          <span id="statusPill" class="pill">🧠 Estado: <b id="saveState">ok</b></span>
+          <button class="btn" id="btnExport">⬇️ Exportar</button>
+          <button class="btn" id="btnImport">⬆️ Importar</button>
+          <button class="btn danger" id="btnReset">🧨 Zerar tudo</button>
+          <button class="btn primary" id="btnToday">📅 Hoje</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="grid">
+      <!-- Calendar -->
+      <section class="card">
+        <div class="calTop">
+          <button class="btn" id="prevMonth">⬅️</button>
+          <h2 class="month" id="monthLabel">Mês</h2>
+          <button class="btn" id="nextMonth">➡️</button>
+        </div>
+        <div class="cal">
+          <div class="dow">
+            <div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div>
+          </div>
+          <div class="days" id="days"></div>
+          <div class="kpi">
+            <span class="pill">📌 Dia selecionado: <b id="selDateLabel">—</b></span>
+            <span class="pill">✅ Tarefas: <b id="selTaskCount">0</b></span>
+            <span class="pill">📝 Notas: <b id="selNoteCount">0</b></span>
+          </div>
+          <div class="sep"></div>
+          <p class="tiny">
+            Dica rápida: pense “pipeline” do seu cérebro. Você captura tudo (voz/texto) → classifica (tag/projeto) → executa por prioridade.
+          </p>
+        </div>
+      </section>
+
+      <!-- Day + Projects -->
+      <aside class="card">
+        <div class="head">
+          <div>
+            <h3 class="title">Painel do dia</h3>
+            <p class="sub">Tarefas, notas e captura por voz. Tudo salvo automático.</p>
+          </div>
+          <span class="pill">🎯 Foco: <b id="focusTag">—</b></span>
+        </div>
+        <div class="body">
+          <div class="row">
+            <div class="grow">
+              <label class="tiny">Projeto/Área</label>
+              <select id="projectSelect">
+                <option value="med">Medicina</option>
+                <option value="eng">Eng. Computação</option>
+                <option value="soft">Software/BTX</option>
+                <option value="info">Infoprodutos</option>
+                <option value="rec">Reciclagem/Construção</option>
+              </select>
+            </div>
+            <div style="min-width:170px">
+              <label class="tiny">Prioridade</label>
+              <select id="prioSelect">
+                <option value="P1">P1 (Agora)</option>
+                <option value="P2">P2 (Hoje/Essa semana)</option>
+                <option value="P3">P3 (Backlog)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="sep"></div>
+
+          <div class="row">
+            <div class="grow">
+              <label class="tiny">Nova tarefa (texto)</label>
+              <input id="taskInput" type="text" placeholder="Ex: Revisar arritmias + fazer 10 questões CRM / Protótipo reciclagem: bloco de teste..." />
+            </div>
+            <button class="btn primary" id="addTask">➕ Adicionar</button>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="voiceToTask">🎙️ Ditado → Tarefas</button>
+            <button class="btn" id="voiceToNotes">🗣️ Ditado → Notas</button>
+            <button class="btn" id="stopVoice">⏹️ Parar</button>
+          </div>
+
+          <div class="voiceState" style="margin-top:10px;">
+            <span class="mic" id="micDot" aria-hidden="true"></span>
+            <p class="hint" id="voiceHint">Voz: pronta. Se o navegador pedir permissão do microfone, permita.</p>
+          </div>
+
+          <div class="sep"></div>
+
+          <label class="tiny">Notas do dia (texto livre)</label>
+          <textarea id="notes" placeholder="Aqui é seu ‘cérebro externo’. Ex: ideia de infoproduto, insight de clínica, esquema de reciclagem, etc."></textarea>
+
+          <div class="sep"></div>
+
+          <div class="row" style="justify-content:space-between;">
+            <span class="tiny">Tarefas do dia</span>
+            <button class="btn" id="clearDone">🧹 Limpar concluídas</button>
+          </div>
+
+          <div class="list" id="taskList"></div>
+        </div>
+
+        <div class="footerNote">
+          <b>Importante:</b> Ditado por voz pode depender de internet e do navegador.
+          Se falhar, use texto e continue — seu sistema ainda funciona.
+          Atalho mental: <span class="kbd">capturar → classificar → executar</span>.
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <input type="file" id="fileInput" accept="application/json" style="display:none" />
+
+  <script>
+    // -----------------------
+    // Storage model
+    // -----------------------
+    const KEY = "btx_planner_v1";
+    const state = load() || {
+      ui: { year: new Date().getFullYear(), month: new Date().getMonth(), selected: isoDate(new Date()) },
+      days: {
+        // "YYYY-MM-DD": { notes:"", tasks:[{id, text, done, project, prio, createdAt}] }
+      }
+    };
+
+    // -----------------------
+    // DOM
+    // -----------------------
+    const daysEl = document.getElementById("days");
+    const monthLabel = document.getElementById("monthLabel");
+    const selDateLabel = document.getElementById("selDateLabel");
+    const selTaskCount = document.getElementById("selTaskCount");
+    const selNoteCount = document.getElementById("selNoteCount");
+    const notesEl = document.getElementById("notes");
+    const taskInput = document.getElementById("taskInput");
+    const taskList = document.getElementById("taskList");
+    const projectSelect = document.getElementById("projectSelect");
+    const prioSelect = document.getElementById("prioSelect");
+    const focusTag = document.getElementById("focusTag");
+
+    const saveStateEl = document.getElementById("saveState");
+    const statusPill = document.getElementById("statusPill");
+
+    const prevMonthBtn = document.getElementById("prevMonth");
+    const nextMonthBtn = document.getElementById("nextMonth");
+    const btnToday = document.getElementById("btnToday");
+
+    const addTaskBtn = document.getElementById("addTask");
+    const clearDoneBtn = document.getElementById("clearDone");
+    const btnExport = document.getElementById("btnExport");
+    const btnImport = document.getElementById("btnImport");
+    const fileInput = document.getElementById("fileInput");
+    const btnReset = document.getElementById("btnReset");
+
+    const voiceToTaskBtn = document.getElementById("voiceToTask");
+    const voiceToNotesBtn = document.getElementById("voiceToNotes");
+    const stopVoiceBtn = document.getElementById("stopVoice");
+    const micDot = document.getElementById("micDot");
+    const voiceHint = document.getElementById("voiceHint");
+
+    // -----------------------
+    // Helpers
+    // -----------------------
+    function isoDate(d){
+      const y = d.getFullYear();
+      const m = String(d.getMonth()+1).padStart(2,"0");
+      const day = String(d.getDate()).padStart(2,"0");
+      return `${y}-${m}-${day}`;
+    }
+    function fmtBR(iso){
+      const [y,m,d] = iso.split("-").map(Number);
+      const dt = new Date(y, m-1, d);
+      return dt.toLocaleDateString("pt-BR", { weekday:"short", day:"2-digit", month:"short", year:"numeric" });
+    }
+    function ensureDay(iso){
+      if(!state.days[iso]) state.days[iso] = { notes:"", tasks:[] };
+      return state.days[iso];
+    }
+    function tagMeta(code){
+      switch(code){
+        case "med": return {label:"Medicina", cls:"med"};
+        case "eng": return {label:"Eng. Computação", cls:"eng"};
+        case "soft": return {label:"Software/BTX", cls:"soft"};
+        case "info": return {label:"Infoprodutos", cls:"info"};
+        case "rec": return {label:"Reciclagem", cls:"rec"};
+        default: return {label:"Geral", cls:""};
+      }
+    }
+    function setSaveState(txt, tone="ok"){
+      saveStateEl.textContent = txt;
+      statusPill.style.borderColor = tone==="bad" ? "rgba(239,68,68,.45)" :
+                                    tone==="warn" ? "rgba(245,158,11,.45)" :
+                                    "rgba(47,125,255,.25)";
+      statusPill.style.background = tone==="bad" ? "rgba(239,68,68,.10)" :
+                                   tone==="warn" ? "rgba(245,158,11,.10)" :
+                                   "rgba(47,125,255,.13)";
+    }
+
+    // -----------------------
+    // Persistence
+    // -----------------------
+    function save(){
+      try{
+        localStorage.setItem(KEY, JSON.stringify(state));
+        setSaveState("salvo");
+      }catch(e){
+        console.error(e);
+        setSaveState("falha ao salvar", "bad");
+      }
+    }
+    function load(){
+      try{
+        const raw = localStorage.getItem(KEY);
+        return raw ? JSON.parse(raw) : null;
+      }catch(e){
+        console.error(e);
+        return null;
+      }
+    }
+
+    // -----------------------
+    // Calendar render
+    // -----------------------
+    function renderCalendar(){
+      const y = state.ui.year;
+      const m = state.ui.month;
+
+      const first = new Date(y, m, 1);
+      const last = new Date(y, m+1, 0);
+      monthLabel.textContent = first.toLocaleDateString("pt-BR", { month:"long", year:"numeric" });
+
+      const startDow = first.getDay(); // 0 dom
+      const daysInMonth = last.getDate();
+
+      // Previous month padding
+      const prevLast = new Date(y, m, 0).getDate();
+
+      daysEl.innerHTML = "";
+
+      const totalCells = 42; // 6 semanas
+      for(let i=0;i<totalCells;i++){
+        const cell = document.createElement("div");
+        cell.className = "day";
+
+        let dayNum, iso, muted=false;
+
+        if(i < startDow){
+          // prev month
+          dayNum = prevLast - (startDow - 1 - i);
+          const dt = new Date(y, m-1, dayNum);
+          iso = isoDate(dt);
+          muted = true;
+        }else if(i >= startDow + daysInMonth){
+          // next month
+          dayNum = i - (startDow + daysInMonth) + 1;
+          const dt = new Date(y, m+1, dayNum);
+          iso = isoDate(dt);
+          muted = true;
+        }else{
+          dayNum = i - startDow + 1;
+          const dt = new Date(y, m, dayNum);
+          iso = isoDate(dt);
+        }
+
+        if(muted) cell.classList.add("muted");
+
+        const d = ensureDay(iso);
+        const tCount = (d.tasks || []).filter(t => !t.done).length;
+        const hasNotes = (d.notes || "").trim().length > 0;
+
+        cell.innerHTML = `
+          <div class="dnum">${dayNum}${(!muted && hasNotes) ? `<span class="dot" title="Tem notas"></span>` : ""}</div>
+          ${(!muted && tCount>0) ? `<div class="badge">${tCount} pend</div>` : ""}
+        `;
+
+        if(iso === state.ui.selected) cell.classList.add("selected");
+
+        cell.addEventListener("click", () => {
+          // permite clicar até nos dias “muted” pra navegar
+          state.ui.selected = iso;
+
+          // se clicar num dia de outro mês, muda o mês automaticamente
+          const [yy,mm,dd] = iso.split("-").map(Number);
+          state.ui.year = yy;
+          state.ui.month = mm-1;
+
+          save();
+          renderAll();
+        });
+
+        daysEl.appendChild(cell);
+      }
+    }
+
+    // -----------------------
+    // Day render
+    // -----------------------
+    function renderDay(){
+      const iso = state.ui.selected;
+      const d = ensureDay(iso);
+
+      selDateLabel.textContent = fmtBR(iso);
+      notesEl.value = d.notes || "";
+
+      const totalTasks = (d.tasks || []).length;
+      const totalNotes = (d.notes || "").trim().length ? 1 : 0;
+      selTaskCount.textContent = totalTasks;
+      selNoteCount.textContent = totalNotes;
+
+      // Focus = projeto selecionado no momento
+      const tmeta = tagMeta(projectSelect.value);
+      focusTag.textContent = tmeta.label;
+
+      // tasks list
+      taskList.innerHTML = "";
+      const tasks = (d.tasks || []).slice().sort((a,b)=>{
+        const pr = {"P1":0,"P2":1,"P3":2};
+        return (pr[a.prio]??9) - (pr[b.prio]??9) || (b.createdAt - a.createdAt);
+      });
+
+      if(tasks.length === 0){
+        const empty = document.createElement("div");
+        empty.className = "tiny";
+        empty.textContent = "Sem tarefas ainda. Use texto ou voz e adicione.";
+        taskList.appendChild(empty);
+        return;
+      }
+
+      for(const t of tasks){
+        const it = document.createElement("div");
+        it.className = "item";
+
+        const meta = tagMeta(t.project);
+        it.innerHTML = `
+          <input class="chk" type="checkbox" ${t.done ? "checked":""} />
+          <div class="meta">
+            <b>${escapeHtml(t.text)}</b>
+            <span>${t.prio} • ${meta.label} • ${new Date(t.createdAt).toLocaleString("pt-BR")}</span>
+          </div>
+          <span class="tag ${meta.cls}">${meta.label}</span>
+          <button class="btn" style="padding:8px 10px; border-radius:12px;" title="Excluir">🗑️</button>
+        `;
+        const chk = it.querySelector("input");
+        const del = it.querySelector("button");
+
+        chk.addEventListener("change", ()=>{
+          t.done = chk.checked;
+          setSaveState("salvando…","warn");
+          save();
+          renderAll();
+        });
+        del.addEventListener("click", ()=>{
+          if(!confirm("Excluir essa tarefa?")) return;
+          d.tasks = d.tasks.filter(x => x.id !== t.id);
+          setSaveState("salvando…","warn");
+          save();
+          renderAll();
+        });
+
+        taskList.appendChild(it);
+      }
+    }
+
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function renderAll(){
+      renderCalendar();
+      renderDay();
+    }
+
+    // -----------------------
+    // Actions
+    // -----------------------
+    prevMonthBtn.addEventListener("click", ()=>{
+      state.ui.month -= 1;
+      if(state.ui.month < 0){ state.ui.month = 11; state.ui.year -= 1; }
+      save();
+      renderAll();
+    });
+    nextMonthBtn.addEventListener("click", ()=>{
+      state.ui.month += 1;
+      if(state.ui.month > 11){ state.ui.month = 0; state.ui.year += 1; }
+      save();
+      renderAll();
+    });
+    btnToday.addEventListener("click", ()=>{
+      const now = new Date();
+      state.ui.year = now.getFullYear();
+      state.ui.month = now.getMonth();
+      state.ui.selected = isoDate(now);
+      save();
+      renderAll();
+    });
+
+    addTaskBtn.addEventListener("click", addTaskFromInput);
+    taskInput.addEventListener("keydown", (e)=>{
+      if(e.key === "Enter") addTaskFromInput();
+    });
+
+    function addTask(text){
+      const iso = state.ui.selected;
+      const d = ensureDay(iso);
+      const clean = (text || "").trim();
+      if(!clean) return;
+
+      d.tasks.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Math.random()).slice(2),
+        text: clean,
+        done:false,
+        project: projectSelect.value,
+        prio: prioSelect.value,
+        createdAt: Date.now()
+      });
+      setSaveState("salvando…","warn");
+      save();
+      renderAll();
+    }
+
+    function addTaskFromInput(){
+      addTask(taskInput.value);
+      taskInput.value = "";
+      taskInput.focus();
+    }
+
+    notesEl.addEventListener("input", ()=>{
+      const iso = state.ui.selected;
+      const d = ensureDay(iso);
+      d.notes = notesEl.value;
+      setSaveState("salvando…","warn");
+      // debounce simples
+      clearTimeout(window.__notesTimer);
+      window.__notesTimer = setTimeout(()=>{ save(); renderCalendar(); }, 250);
+    });
+
+    projectSelect.addEventListener("change", renderDay);
+
+    clearDoneBtn.addEventListener("click", ()=>{
+      const iso = state.ui.selected;
+      const d = ensureDay(iso);
+      const before = d.tasks.length;
+      d.tasks = d.tasks.filter(t => !t.done);
+      if(d.tasks.length !== before){
+        setSaveState("salvando…","warn");
+        save();
+        renderAll();
+      }
+    });
+
+    btnExport.addEventListener("click", ()=>{
+      const blob = new Blob([JSON.stringify(state, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `btx_planner_backup_${new Date().toISOString().slice(0,10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    btnImport.addEventListener("click", ()=> fileInput.click());
+    fileInput.addEventListener("change", async ()=>{
+      const file = fileInput.files && fileInput.files[0];
+      if(!file) return;
+      try{
+        const txt = await file.text();
+        const obj = JSON.parse(txt);
+        if(!obj || typeof obj !== "object" || !obj.ui || !obj.days) throw new Error("Formato inválido.");
+        // substitui estado
+        Object.assign(state, obj);
+        setSaveState("importado","warn");
+        save();
+        renderAll();
+      }catch(e){
+        alert("Falha ao importar: " + e.message);
+      }finally{
+        fileInput.value = "";
+      }
+    });
+
+    btnReset.addEventListener("click", ()=>{
+      if(!confirm("Isso vai apagar tudo deste navegador. Tem certeza?")) return;
+      localStorage.removeItem(KEY);
+      location.reload();
+    });
+
+    // -----------------------
+    // Voice (Web Speech API)
+    // -----------------------
+    let recognition = null;
+    let voiceMode = null; // "task" | "notes"
+
+    function canVoice(){
+      return ("webkitSpeechRecognition" in window) || ("SpeechRecognition" in window);
+    }
+
+    function setupRecognition(){
+      const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognition = new SR();
+      recognition.lang = "pt-BR";
+      recognition.interimResults = true;
+      recognition.continuous = true;
+
+      recognition.onstart = () => {
+        micDot.classList.add("on");
+        voiceHint.textContent = "Ouvindo… fale naturalmente. (Dica: diga frases curtas.)";
+      };
+      recognition.onend = () => {
+        micDot.classList.remove("on");
+        voiceHint.textContent = "Voz: parada.";
+      };
+      recognition.onerror = (e) => {
+        micDot.classList.remove("on");
+        console.warn("voice error", e);
+        voiceHint.textContent = "Voz: erro (" + (e.error || "desconhecido") + "). Se falhar, tente no Chrome com internet.";
+      };
+
+      let finalBuffer = "";
+      recognition.onresult = (event) => {
+        let interim = "";
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const res = event.results[i];
+          const transcript = (res[0].transcript || "").trim();
+          if (res.isFinal) {
+            finalBuffer += (finalBuffer ? " " : "") + transcript;
+          } else {
+            interim += (interim ? " " : "") + transcript;
+          }
+        }
+
+        // Exibe feedback
+        const preview = (finalBuffer + (interim ? (" " + interim) : "")).trim();
+        if(preview){
+          voiceHint.textContent = "Capturando: “" + preview.slice(0,160) + (preview.length>160 ? "…" : "") + "”";
+        }
+
+        // Quando acumular final, aplica dependendo do modo
+        if(finalBuffer && voiceMode){
+          if(voiceMode === "task"){
+            // quebra em tarefas se a frase vier longa
+            addTask(finalBuffer);
+          }else if(voiceMode === "notes"){
+            notesEl.value = (notesEl.value ? (notesEl.value + "\n") : "") + finalBuffer;
+            const iso = state.ui.selected;
+            const d = ensureDay(iso);
+            d.notes = notesEl.value;
+            setSaveState("salvando…","warn");
+            save();
+            renderCalendar();
+          }
+          finalBuffer = "";
+        }
+      };
+    }
+
+    function startVoice(mode){
+      if(!canVoice()){
+        voiceHint.textContent = "Este navegador não suporta ditado por voz. Use Chrome/Edge.";
+        alert("Ditado por voz não suportado aqui. Tente no Chrome/Edge.");
+        return;
+      }
+      if(!recognition) setupRecognition();
+      voiceMode = mode;
+      try{
+        recognition.start();
+      }catch(e){
+        // start pode falhar se já estiver rodando
+        console.warn(e);
+      }
+    }
+
+    function stopVoice(){
+      voiceMode = null;
+      if(recognition){
+        try{ recognition.stop(); }catch(e){}
+      }
+    }
+
+    voiceToTaskBtn.addEventListener("click", ()=> startVoice("task"));
+    voiceToNotesBtn.addEventListener("click", ()=> startVoice("notes"));
+    stopVoiceBtn.addEventListener("click", stopVoice);
+
+    // -----------------------
+    // Boot
+    // -----------------------
+    // Define mês/ano se não existir
+    if(!state.ui || typeof state.ui !== "object"){
+      const now = new Date();
+      state.ui = { year: now.getFullYear(), month: now.getMonth(), selected: isoDate(now) };
+    }
+    // garante dia selecionado
+    ensureDay(state.ui.selected);
+
+    if(!canVoice()){
+      voiceHint.textContent = "Voz: indisponível neste navegador. Tente Chrome/Edge.";
+      micDot.style.opacity = ".35";
+    }
+
+    renderAll();
+    save();
+
+  </script>
+</body>
+</html>
